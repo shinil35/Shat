@@ -34,7 +34,7 @@ public class NetworkClient
 	public NetworkClient(int ID)
 	{
 		id = ID;
-		
+
 		client = new Client();
 		clientListener = new NetworkClientListener(new Listener(), this);
 		NetworkManager.registerPackets(client.getKryo());

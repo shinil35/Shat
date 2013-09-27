@@ -52,29 +52,6 @@ public class Database
 	}
 
 	/**
-	 * Execute one update query.
-	 * 
-	 * @param query
-	 *            to be executed.
-	 */
-	public static void executeUpdate(String query)
-	{
-		if (!initialized)
-			return;
-
-		try
-		{
-			Statement sta = connection.createStatement();
-			sta.executeUpdate(query);
-			sta.close();
-		}
-		catch (SQLException e)
-		{
-			Log.localizedWarn("[SQL_QUERY_ERROR]", e.getMessage());
-		}
-	}
-
-	/**
 	 * 
 	 * @return The database connection.
 	 */
@@ -97,7 +74,7 @@ public class Database
 
 			loadTables();
 		}
-		catch (Exception e)
+		catch (ClassNotFoundException | SQLException e)
 		{
 			Log.localizedError("[SQL_INIT_ERROR]", e.getMessage());
 			Log.localizedError("[FATAL_ERROR]", e.getMessage());

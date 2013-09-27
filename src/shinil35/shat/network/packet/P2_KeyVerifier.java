@@ -34,6 +34,7 @@ public class P2_KeyVerifier implements IPacket
 		return Arrays.equals(realData, decData);
 	}
 
+	@Override
 	public void writePacket(NetworkConnectionData connectionData, IPacket oldPacket, Object packetData)
 	{
 		if (!oldPacket.getClass().equals(P1_KeyVerifier.class))

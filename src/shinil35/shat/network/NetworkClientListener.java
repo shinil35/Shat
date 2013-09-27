@@ -39,6 +39,7 @@ public class NetworkClientListener extends ThreadedListener
 		networkClient = c;
 	}
 
+	@Override
 	public void connected(Connection conn)
 	{
 		Log.trace("Nuova connessione in uscita, id: " + conn.getID());
@@ -52,6 +53,7 @@ public class NetworkClientListener extends ThreadedListener
 		connectionData.setRandomBytes(outPacket.getRandomBytes());
 	}
 
+	@Override
 	public void disconnected(Connection conn)
 	{
 		Log.debug("Connessione in uscita chiusa, id: " + conn.getID());
@@ -65,6 +67,7 @@ public class NetworkClientListener extends ThreadedListener
 		return connectionData;
 	}
 
+	@Override
 	public void received(Connection conn, Object rec)
 	{
 		if (rec instanceof FrameworkMessage)

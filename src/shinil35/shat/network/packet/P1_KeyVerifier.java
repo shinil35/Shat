@@ -49,6 +49,7 @@ public class P1_KeyVerifier implements IPacket
 		return newRandomBytes;
 	}
 
+	@Override
 	public void writePacket(NetworkConnectionData connectionData, IPacket oldPacket, Object packetData)
 	{
 		if (!oldPacket.getClass().equals(P0_PublicKey.class))

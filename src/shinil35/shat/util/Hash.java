@@ -29,6 +29,7 @@ public class Hash
 		this.algorithm = algorithm;
 	}
 
+	@Override
 	public boolean equals(Object other)
 	{
 		if (!(other instanceof Hash))
@@ -60,6 +61,7 @@ public class Hash
 		return Hashing.getHexString(bytes);
 	}
 
+	@Override
 	public int hashCode()
 	{
 		return getReadableHash().hashCode();

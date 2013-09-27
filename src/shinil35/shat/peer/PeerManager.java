@@ -41,7 +41,7 @@ public class PeerManager
 	private static boolean initialized = false;
 
 	private static int maxPeerLoaded = 200;
-	
+
 	public static void addPeer(Peer p)
 	{
 		if (!initialized || peers.containsKey(p.getHash()))
@@ -232,6 +232,7 @@ public class PeerManager
 		Collections.sort(p, new Comparator<Peer>()
 		{
 
+			@Override
 			public int compare(Peer a, Peer b)
 			{
 				long aLast = 0;

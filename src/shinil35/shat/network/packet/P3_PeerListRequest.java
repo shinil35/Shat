@@ -20,6 +20,7 @@ import shinil35.shat.network.NetworkConnectionData;
 
 public class P3_PeerListRequest implements IPacket
 {
+	@Override
 	public void writePacket(NetworkConnectionData connectionData, IPacket oldPacket, Object packetData)
 	{
 	}

@@ -41,7 +41,7 @@ public class Main
 	private static KeyPair rsaKeys = null;
 
 	private static UpdaterThread updater;
-	
+
 	/**
 	 * Close shat
 	 */
@@ -53,10 +53,12 @@ public class Main
 			keyboardScanner.close();
 
 		updater.close();
-		
+
 		NetworkManager.close();
 		PeerManager.close();
 		Database.close();
+
+		// TODO: Chiude tutti i thread?
 	}
 
 	/**
@@ -77,14 +79,8 @@ public class Main
 			{
 				String text = keyboardScanner.nextLine();
 
-				String[] parts = text.split(" ", 2);
+				String[] parts = text.split(" ", 2); // [0] = Command, [1] Arguments
 				String command = parts[0];
-
-				@SuppressWarnings("unused")
-				String argPart = "";
-
-				if (parts.length >= 2)
-					argPart = parts[1];
 
 				switch (command)
 				{
@@ -197,10 +193,10 @@ public class Main
 
 		Log.localizedInfo("[CONSOLE_LOADING_NET]");
 		NetworkManager.init();
-		
+
 		updater = new UpdaterThread();
 		updater.start();
-		
+
 		Log.localizedInfo("[CONSOLE_LOAD_COMPLETE]");
 
 		System.out.println();

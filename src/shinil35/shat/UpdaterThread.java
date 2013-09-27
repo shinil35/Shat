@@ -19,22 +19,28 @@ package shinil35.shat;
 public class UpdaterThread extends Thread
 {
 	private boolean run = false;
-	
+
 	public UpdaterThread()
 	{
 		super();
 	}
-	
+
+	public void close()
+	{
+		run = false;
+	}
+
+	@Override
 	public void run()
 	{
 		run = true;
-		
-		while(run)
+
+		while (run)
 		{
 			try
 			{
 				// TODO: Do something, like update peer list, update gui, etc..
-				
+
 				Thread.sleep(1); // The sleep time is 1 for fast-closing without throwing InterruptedException.
 			}
 			catch (InterruptedException e)
@@ -42,10 +48,5 @@ public class UpdaterThread extends Thread
 				return;
 			}
 		}
-	}
-	
-	public void close()
-	{
-		run = false;
 	}
 }
