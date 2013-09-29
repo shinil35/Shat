@@ -16,11 +16,13 @@
 
 package shinil35.shat.network;
 
-import shinil35.shat.network.packet.P5_Message;
+import java.io.IOException;
+import java.net.InetAddress;
+
+import shinil35.shat.network.packet.IPacket;
 
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Listener;
-import com.esotericsoftware.minlog.Log;
 
 public class NetworkClient
 {
@@ -50,33 +52,25 @@ public class NetworkClient
 		closed = true;
 
 		if (client != null)
-			client.close();
+			client.stop();
 
 		NetworkManager.removeClient(id);
 
 		id = 0;
 	}
 
-	public void connect(String IP, int port)
+	public void connect(String IP, int port) throws IOException
 	{
 		connect(IP, port, 5000);
 	}
 
-	public void connect(String IP, int port, int timeout)
+	public void connect(String IP, int port, int timeout) throws IOException
 	{
 		if (closed || client == null)
 			return;
 
-		try
-		{
-			client.connect(timeout, IP, port);
-			return;
-		}
-		catch (Exception e)
-		{
-			Log.localizedWarn("[NETWORK_CONNECTION_FAILED]", e.getMessage());
-			close();
-		}
+		client.connect(timeout, InetAddress.getByName(IP), port);
+		return;
 	}
 
 	public Client getClient()
@@ -84,13 +78,30 @@ public class NetworkClient
 		return client;
 	}
 
-	public void sendMessage(P5_Message packet)
+	public void requestPeerList()
 	{
-		if (closed || !clientListener.getConnectionData().getHandshakeStatus()
-				|| clientListener.getConnectionData().messageWasSended(packet.getMessageHash()))
+		if (closed)
 			return;
 
-		client.sendTCP(packet);
+		NetworkConnectionData data = clientListener.getConnectionData();
+
+		if (data == null)
+			return;
+
+		data.requestPeerList();
+	}
+
+	public void sendPacket(IPacket packet)
+	{
+		if (closed)
+			return;
+
+		NetworkConnectionData data = clientListener.getConnectionData();
+
+		if (data == null)
+			return;
+
+		data.sendPacket(packet);
 	}
 
 }

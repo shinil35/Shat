@@ -112,8 +112,8 @@ public class Database
 
 		if (!tables.contains("peers") || !tables.contains("data"))
 		{
-			sta.executeUpdate("DELETE IF EXISTS peers");
-			sta.executeUpdate("DELETE IF EXISTS data");
+			sta.executeUpdate("DROP TABLE IF EXISTS peers");
+			sta.executeUpdate("DROP TABLE IF EXISTS data");
 
 			sta.executeUpdate("CREATE TABLE peers (hash  text  primary key  not null, public_key  BLOB  not null, "
 					+ "ip  varchar(15)  not null, port  uint  not null, last_access  int64  not null);");

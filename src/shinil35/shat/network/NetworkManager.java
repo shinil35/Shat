@@ -16,12 +16,15 @@
 
 package shinil35.shat.network;
 
+import java.io.IOException;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 import shinil35.shat.Configuration;
 import shinil35.shat.Language;
+import shinil35.shat.Main;
+import shinil35.shat.network.packet.IPacket;
 import shinil35.shat.network.packet.P0_PublicKey;
 import shinil35.shat.network.packet.P1_KeyVerifier;
 import shinil35.shat.network.packet.P2_KeyVerifier;
@@ -29,6 +32,7 @@ import shinil35.shat.network.packet.P3_PeerListRequest;
 import shinil35.shat.network.packet.P4_PeerListResponse;
 import shinil35.shat.network.packet.P5_Message;
 import shinil35.shat.peer.PeerData;
+import shinil35.shat.util.Utility;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.minlog.Log;
@@ -71,6 +75,15 @@ public class NetworkManager
 		}
 	}
 
+	public static void delayedConnection(String IP, int port)
+	{
+		if (!Utility.isValidAddress(IP, port))
+			return;
+
+		NetworkConnector con = new NetworkConnector(IP, port);
+		Main.executeTask(con);
+	}
+
 	public static void init()
 	{
 		servers = new ConcurrentHashMap<Integer, NetworkServer>();
@@ -104,42 +117,7 @@ public class NetworkManager
 			newServer(listeningPort);
 
 		if (bootstrapEnabled)
-			newClient(bootstrapIP, bootstrapPort);
-	}
-
-	public static void newClient(String IP, int port)
-	{
-		if (!initialized)
-			return;
-
-		int id = 0;
-
-		NetworkClient c;
-
-		synchronized (clients)
-		{
-			boolean exists = true;
-
-			while (exists)
-			{
-				exists = false;
-
-				for (int i : clients.keySet())
-				{
-					if (i == id)
-					{
-						exists = true;
-						id++;
-						break;
-					}
-				}
-			}
-
-			c = new NetworkClient(id);
-			clients.put(id, c);
-		}
-
-		c.connect(IP, port);
+			delayedConnection(bootstrapIP, bootstrapPort);
 	}
 
 	public static void newServer(int bindPort)
@@ -249,12 +227,62 @@ public class NetworkManager
 			servers.remove(s);
 	}
 
-	public static void sendMessage(P5_Message packet)
+	public static void requestPeerList()
 	{
+		if (!initialized)
+			return;
+
 		for (NetworkServer s : servers.values())
-			s.sendMessage(packet);
+			s.requestPeerList();
 
 		for (NetworkClient c : clients.values())
-			c.sendMessage(packet);
+			c.requestPeerList();
+	}
+
+	public static void sendToAll(IPacket packet)
+	{
+		if (!initialized)
+			return;
+
+		for (NetworkServer s : servers.values())
+			s.sendToAll(packet);
+
+		for (NetworkClient c : clients.values())
+			c.sendPacket(packet);
+	}
+
+	public static void waitForConnection(String IP, int port) throws IOException // ATTENTION: Thread will stop for connection! (Max 5 seconds)
+	{
+		if (!initialized || !Utility.isValidAddress(IP, port))
+			return;
+
+		int id = 0;
+
+		NetworkClient c;
+
+		synchronized (clients)
+		{
+			boolean exists = true;
+
+			while (exists)
+			{
+				exists = false;
+
+				for (int i : clients.keySet())
+				{
+					if (i == id)
+					{
+						exists = true;
+						id++;
+						break;
+					}
+				}
+			}
+
+			c = new NetworkClient(id);
+			clients.put(id, c);
+		}
+
+		c.connect(IP, port);
 	}
 }

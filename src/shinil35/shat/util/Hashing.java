@@ -17,6 +17,7 @@
 package shinil35.shat.util;
 
 import java.security.MessageDigest;
+import java.security.PublicKey;
 
 import com.esotericsoftware.minlog.Log;
 
@@ -41,6 +42,11 @@ public class Hashing
 
 			return null;
 		}
+	}
+
+	public static Hash getHash(PublicKey publicKey)
+	{
+		return getHash(Encoding.encodePublicKey(publicKey));
 	}
 
 	public static String getHexString(byte[] data)

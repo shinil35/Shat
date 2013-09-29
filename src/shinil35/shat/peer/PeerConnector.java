@@ -1,4 +1,4 @@
-/*	Copyright (C) 2013 Emilio Cafe' Nunes
+/*	Copyright (C) 2013 Emilio Cafè Nunes
  *
  *	This program is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -14,39 +14,31 @@
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package shinil35.shat;
+package shinil35.shat.peer;
 
-public class UpdaterThread extends Thread
+import java.util.ArrayList;
+
+import shinil35.shat.util.Utility;
+
+public class PeerConnector implements Runnable
 {
-	private boolean run = false;
-
-	public UpdaterThread()
+	public PeerConnector()
 	{
-		super();
-	}
 
-	public void close()
-	{
-		run = false;
 	}
 
 	@Override
 	public void run()
 	{
-		run = true;
+		ArrayList<Peer> peerList = PeerManager.getPeerList();
 
-		while (run)
+		for (Peer p : peerList)
 		{
-			try
-			{
-				// TODO: Do something, like update peer list, update gui, etc..
+			String IP = p.getIP();
+			int port = p.getPort();
 
-				Thread.sleep(1); // The sleep time is 1 for fast-closing without throwing InterruptedException.
-			}
-			catch (InterruptedException e)
-			{
-				return;
-			}
+			if (!Utility.isValidAddress(IP, port))
+				continue;
 		}
 	}
 }

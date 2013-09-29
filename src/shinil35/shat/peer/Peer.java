@@ -18,7 +18,6 @@ package shinil35.shat.peer;
 
 import java.security.PublicKey;
 
-import shinil35.shat.util.Encoding;
 import shinil35.shat.util.Hash;
 import shinil35.shat.util.Hashing;
 
@@ -31,7 +30,7 @@ public class Peer
 	private int status;
 	private long lastCommunication;
 
-	public static final int PEER_UNKNOW = 0;
+	public static final int UNKNOW = 0;
 	public static final int AVAILABLE = 1;
 	public static final int CONNECTED = 2;
 
@@ -86,7 +85,7 @@ public class Peer
 	public void setPublicKey(PublicKey pk)
 	{
 		publicKey = pk;
-		publicKeyHash = Hashing.getHash(Encoding.encodePublicKey(publicKey), "SHA-512");
+		publicKeyHash = Hashing.getHash(pk);
 	}
 
 	public void setStatus(int status)

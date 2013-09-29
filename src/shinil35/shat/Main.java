@@ -25,8 +25,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import shinil35.shat.network.NetworkManager;
+import shinil35.shat.network.NetworkPeerRequester;
 import shinil35.shat.peer.PeerManager;
 import shinil35.shat.util.Encoding;
 import shinil35.shat.util.RSA;
@@ -40,7 +44,7 @@ public class Main
 	private static Charset charset = Charset.forName("UTF-8");
 	private static KeyPair rsaKeys = null;
 
-	private static UpdaterThread updater;
+	private static ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(10);
 
 	/**
 	 * Close shat
@@ -52,8 +56,7 @@ public class Main
 		if (keyboardScanner != null)
 			keyboardScanner.close();
 
-		updater.close();
-
+		scheduledExecutor.shutdown();
 		NetworkManager.close();
 		PeerManager.close();
 		Database.close();
@@ -101,6 +104,14 @@ public class Main
 		{
 			keyboardScanner.close();
 		}
+	}
+
+	/**
+	 * Execute one Runnable element with the scheduledExecutor.
+	 */
+	public static void executeTask(Runnable toRun)
+	{
+		scheduledExecutor.execute(toRun);
 	}
 
 	/**
@@ -194,8 +205,7 @@ public class Main
 		Log.localizedInfo("[CONSOLE_LOADING_NET]");
 		NetworkManager.init();
 
-		updater = new UpdaterThread();
-		updater.start();
+		scheduledExecutor.scheduleWithFixedDelay(new NetworkPeerRequester(), 0, 30, TimeUnit.SECONDS);
 
 		Log.localizedInfo("[CONSOLE_LOAD_COMPLETE]");
 

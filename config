@@ -4,6 +4,6 @@ log.level=1
 network.listening.enabled=true
 network.listening.port=80
 
-network.bootstrap.enabled=false
+network.bootstrap.enabled=true
 network.bootstrap.host=127.0.0.1
-network.bootstrap.port=90
+network.bootstrap.port=85

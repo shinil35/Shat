@@ -16,9 +16,11 @@
 
 package shinil35.shat.network;
 
-import java.util.Map.Entry;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
-import shinil35.shat.network.packet.P5_Message;
+import shinil35.shat.network.packet.IPacket;
 
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
@@ -53,9 +55,9 @@ public class NetworkServer
 
 		try
 		{
-			server.bind(port);
+			server.bind(new InetSocketAddress(InetAddress.getByName("::0"), p), null);
 		}
-		catch (Exception e)
+		catch (IOException e)
 		{
 			Log.localizedWarn("[NETWORK_LISTENING_FAILED]", e.getMessage());
 			close();
@@ -70,11 +72,16 @@ public class NetworkServer
 		closed = true;
 
 		if (server != null)
-			server.close();
+			server.stop();
 
 		NetworkManager.removeServer(id);
 
 		id = 0;
+	}
+
+	public int getPort()
+	{
+		return port;
 	}
 
 	public Server getServer()
@@ -82,17 +89,31 @@ public class NetworkServer
 		return server;
 	}
 
-	public void sendMessage(P5_Message packet)
+	public void requestPeerList()
 	{
-		for (Entry<Integer, NetworkConnectionData> k : serverListener.getConnectionDatas().entrySet())
-		{
-			int id = k.getKey();
-			NetworkConnectionData data = k.getValue();
+		if (closed)
+			return;
 
-			if (data == null || !data.getHandshakeStatus() || data.messageWasSended(packet.getMessageHash()))
+		for (NetworkConnectionData data : serverListener.getConnectionDatas().values())
+		{
+			if (data == null)
 				continue;
 
-			server.sendToTCP(id, data);
+			data.requestPeerList();
+		}
+	}
+
+	public void sendToAll(IPacket packet)
+	{
+		if (closed)
+			return;
+
+		for (NetworkConnectionData data : serverListener.getConnectionDatas().values())
+		{
+			if (data == null)
+				continue;
+
+			data.sendPacket(packet);
 		}
 	}
 }

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import shinil35.shat.network.NetworkConnectionData;
 import shinil35.shat.peer.PeerData;
 import shinil35.shat.peer.PeerManager;
+import shinil35.shat.util.Hashing;
 
 public class P4_PeerListResponse implements IPacket
 {
@@ -35,12 +36,28 @@ public class P4_PeerListResponse implements IPacket
 
 	public int getQuantity()
 	{
+		if (peerList == null)
+			return 0;
+
 		return peerList.size();
 	}
 
 	@Override
 	public void writePacket(NetworkConnectionData connectionData, IPacket oldPacket, Object packetData)
 	{
-		peerList = PeerManager.getPeerDataList(peerResponseSize);
+		boolean empty = false;
+
+		if (packetData instanceof Boolean)
+			empty = (boolean) packetData;
+
+		if (!empty)
+		{
+			peerList = PeerManager.getPeerDataList(peerResponseSize, Hashing.getHash(connectionData.getPublicKey()));
+
+			if (peerList != null && peerList.size() == 0)
+				peerList = null;
+		}
+		else
+			peerList = null;
 	}
 }

@@ -33,11 +33,12 @@ public class P5_Message implements IPacket
 	private byte[] encryptedSourcePublicKey;
 	private byte[] randomBytes;
 
-	public Hash getMessageHash()
+	public Hash getPacketHash()
 	{
-		ByteBuffer hashB = ByteBuffer.allocate(encryptedSignedMessage.length + randomBytes.length);
+		ByteBuffer hashB = ByteBuffer.allocate(encryptedSignedMessage.length + randomBytes.length + encryptedSourcePublicKey.length);
 		hashB.put(encryptedSignedMessage);
 		hashB.put(randomBytes);
+		hashB.put(encryptedSourcePublicKey);
 		Hash hash = Hashing.getHash(hashB.array());
 		hashB.clear();
 

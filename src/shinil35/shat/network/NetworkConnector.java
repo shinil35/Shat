@@ -1,4 +1,4 @@
-/*	Copyright (C) 2013 Emilio Cafe' Nunes
+/*	Copyright (C) 2013 Emilio Cafè Nunes
  *
  *	This program is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -14,47 +14,38 @@
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package shinil35.shat.util;
+package shinil35.shat.network;
 
-import java.net.InetAddress;
-import java.util.Date;
-import java.util.Random;
+import java.io.IOException;
 
-public class Utility
+import shinil35.shat.util.Utility;
+
+import com.esotericsoftware.minlog.Log;
+
+public class NetworkConnector implements Runnable
 {
-	public static long getElapsedFromTime(long timeA)
+	private String ip;
+	private int port;
+
+	public NetworkConnector(String ip, int port)
 	{
-		return getTimeNow() - timeA;
+		this.ip = ip;
+		this.port = port;
 	}
 
-	public static long getTimeNow()
+	@Override
+	public void run()
 	{
-		return new Date().getTime();
-	}
+		if (!Utility.isValidAddress(ip, port))
+			return;
 
-	public static boolean isValidAddress(String IP, int port)
-	{
 		try
 		{
-			if (port <= 0 || port >= 65535)
-				return false;
-
-			InetAddress.getByName(IP);
-			return true;
+			NetworkManager.waitForConnection(ip, port);
 		}
-		catch (Exception e)
+		catch (IOException e)
 		{
-			return false;
+			Log.trace("Connessione a \"[" + ip + "]:" + port + "\" fallita");
 		}
-	}
-
-	public static byte[] randomBytes(int size)
-	{
-		byte[] randomBytes = new byte[size];
-
-		Random random = new Random();
-		random.nextBytes(randomBytes);
-
-		return randomBytes;
 	}
 }

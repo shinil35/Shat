@@ -54,7 +54,7 @@ public class NetworkConnectionData
 
 	public void elaboratePacket(IPacket inPacket)
 	{
-		if (!handshakeCompleted)
+		if (!getHandshakeStatus())
 		{
 			conn.close();
 			return;
@@ -74,12 +74,12 @@ public class NetworkConnectionData
 			P4_PeerListResponse resp = (P4_PeerListResponse) inPacket;
 			PeerManager.addPeerDataList(resp.getPeerList());
 
-			Log.trace("Peer list received");
+			Log.trace("Received peer list!");
 		}
 		else if (inPacket instanceof P5_Message)
 		{
 			P5_Message messagePacket = (P5_Message) inPacket;
-			Hash messageHash = messagePacket.getMessageHash();
+			Hash messageHash = messagePacket.getPacketHash();
 
 			if (messageHashes.contains(messageHash))
 				return;
@@ -140,13 +140,7 @@ public class NetworkConnectionData
 
 	public void requestPeerList()
 	{
-		if (!handshakeCompleted)
-		{
-			conn.close();
-			return;
-		}
-
-		if (Utility.getElapsedFromTime(getPeersRequestingTime()) < 30000)
+		if (!getHandshakeStatus() || Utility.getElapsedFromTime(getPeersRequestingTime()) < 30000)
 			return;
 
 		lastPeersRequestingTime = Utility.getTimeNow();
@@ -156,27 +150,44 @@ public class NetworkConnectionData
 		outPacket.writePacket(this, null, null);
 		conn.sendTCP(outPacket);
 
-		Log.trace("Peer list requested");
+		Log.trace("Requesting peer list");
+	}
+
+	public void sendPacket(IPacket outPacket)
+	{
+		if (!getHandshakeStatus())
+			return;
+
+		if (outPacket instanceof P5_Message)
+		{
+			P5_Message outMessage = (P5_Message) outPacket;
+
+			if (messageWasSended(outMessage.getPacketHash()))
+				return;
+
+			messageHashes.add(outMessage.getPacketHash());
+
+			conn.sendTCP(outMessage);
+		}
 	}
 
 	public void sendPeerList()
 	{
-		if (!handshakeCompleted)
-		{
-			conn.close();
+		if (!getHandshakeStatus() || Utility.getElapsedFromTime(getPeersSendingTime()) < 20000)
 			return;
-		}
 
-		if (Utility.getElapsedFromTime(getPeersSendingTime()) < 20000)
-			return;
+		P4_PeerListResponse outPacket = new P4_PeerListResponse();
+
+		if (lastPeersSendingTime > PeerManager.getLastPeerListUpdate())
+			outPacket.writePacket(this, null, true);
+		else
+			outPacket.writePacket(this, null, null);
 
 		lastPeersSendingTime = Utility.getTimeNow();
 
-		P4_PeerListResponse outPacket = new P4_PeerListResponse();
-		outPacket.writePacket(this, null, null);
 		int b = conn.sendTCP(outPacket);
 
-		Log.trace("Peer list sended, bytes: " + b);
+		Log.trace("Sending peer list, bytes: " + b + ", count: " + outPacket.getQuantity());
 	}
 
 	public void setPublicKey(PublicKey pk)

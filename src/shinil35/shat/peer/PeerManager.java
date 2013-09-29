@@ -29,9 +29,12 @@ import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
 import shinil35.shat.Database;
+import shinil35.shat.Main;
 import shinil35.shat.network.NetworkConnectionData;
 import shinil35.shat.util.Encoding;
 import shinil35.shat.util.Hash;
+import shinil35.shat.util.Hashing;
+import shinil35.shat.util.Utility;
 
 import com.esotericsoftware.minlog.Log;
 
@@ -41,11 +44,26 @@ public class PeerManager
 	private static boolean initialized = false;
 
 	private static int maxPeerLoaded = 200;
+	private static long lastPeerListUpdating = 0;
 
 	public static void addPeer(Peer p)
 	{
-		if (!initialized || peers.containsKey(p.getHash()))
+		addPeer(p, true);
+	}
+
+	public static void addPeer(Peer p, boolean database)
+	{
+		if (!initialized || peers.containsKey(p.getHash()) || Hashing.getHash(Main.getPublicKey()).equals(p.getHash())
+				|| !Utility.isValidAddress(p.getIP(), p.getPort()))
 			return;
+
+		if (!database)
+		{
+			peers.put(p.getHash(), p);
+			lastPeerListUpdating = Utility.getTimeNow();
+
+			return;
+		}
 
 		try
 		{
@@ -60,10 +78,10 @@ public class PeerManager
 			st.close();
 
 			peers.put(p.getHash(), p);
+			lastPeerListUpdating = Utility.getTimeNow();
 		}
 		catch (SQLException e)
 		{
-			e.printStackTrace();
 			Log.localizedWarn("[SQL_QUERY_ERROR]", e.getMessage());
 		}
 	}
@@ -105,7 +123,12 @@ public class PeerManager
 		addPeer(p);
 	}
 
-	public static ArrayList<PeerData> getPeerDataList(int maxPeers)
+	public static long getLastPeerListUpdate()
+	{
+		return lastPeerListUpdating;
+	}
+
+	public static ArrayList<PeerData> getPeerDataList(int maxPeers, Hash exclude)
 	{
 		if (!initialized)
 			return null;
@@ -115,14 +138,20 @@ public class PeerManager
 		if (maxPeers < 0 || maxPeers >= peers.size())
 		{
 			for (Peer p : peers.values())
-				toReturn.add(p.getPeerData());
+			{
+				if (!p.getHash().equals(exclude) && Utility.isValidAddress(p.getIP(), p.getPort()))
+					toReturn.add(p.getPeerData());
+			}
 		}
 		else
 		{
 			ArrayList<Peer> orderedPeers = sortPeerList(new ArrayList<Peer>(peers.values()));
 
 			for (Peer p : orderedPeers)
-				toReturn.add(p.getPeerData());
+			{
+				if (!p.getHash().equals(exclude) && Utility.isValidAddress(p.getIP(), p.getPort()))
+					toReturn.add(p.getPeerData());
+			}
 
 			toReturn = new ArrayList<PeerData>(toReturn.subList(0, maxPeers));
 		}
@@ -136,6 +165,11 @@ public class PeerManager
 			return null;
 
 		return peers.get(hash);
+	}
+
+	public static ArrayList<Peer> getPeerList()
+	{
+		return new ArrayList<Peer>(peers.values());
 	}
 
 	public static int getPeerQuantity()
@@ -175,7 +209,7 @@ public class PeerManager
 
 				Peer p = new Peer(pk, ip, port, last);
 
-				peers.put(p.getHash(), p);
+				addPeer(p, false);
 			}
 
 			sta.close();
@@ -202,7 +236,10 @@ public class PeerManager
 			exceedingPeers.subList(exceedingPeers.size() - maxPeerLoaded, exceedingPeers.size());
 
 			for (Peer p : exceedingPeers)
+			{
 				removePeer(p.getHash());
+				lastPeerListUpdating = Utility.getTimeNow();
+			}
 		}
 	}
 
@@ -220,6 +257,7 @@ public class PeerManager
 			st.close();
 
 			peers.remove(peerHash);
+			lastPeerListUpdating = Utility.getTimeNow();
 		}
 		catch (SQLException e)
 		{
