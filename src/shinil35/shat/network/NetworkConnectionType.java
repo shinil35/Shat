@@ -16,11 +16,7 @@
 
 package shinil35.shat.network;
 
-public class NetworkPeerRequester implements Runnable
+public enum NetworkConnectionType
 {
-	@Override
-	public void run()
-	{
-		NetworkManager.requestPeerList();
-	}
+	INCOMING, OUTGOING
 }

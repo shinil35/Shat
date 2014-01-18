@@ -20,13 +20,28 @@ import java.security.PublicKey;
 
 import shinil35.shat.Main;
 import shinil35.shat.network.NetworkConnectionData;
+import shinil35.shat.network.NetworkManager;
 import shinil35.shat.util.Encoding;
 import shinil35.shat.util.Utility;
 
 public class P0_PublicKey implements IPacket
 {
 	private byte[] encodedPublicKey;
+	private int listeningPort;
 	private byte[] randomBytes;
+
+	@Override
+	public void dispose()
+	{
+		encodedPublicKey = null;
+		listeningPort = -1;
+		randomBytes = null;
+	}
+
+	public int getListeningPort()
+	{
+		return listeningPort;
+	}
 
 	public PublicKey getPublicKey()
 	{
@@ -42,6 +57,7 @@ public class P0_PublicKey implements IPacket
 	public void writePacket(NetworkConnectionData connectionData, IPacket oldPacket, Object packetData)
 	{
 		encodedPublicKey = Encoding.encodePublicKey(Main.getPublicKey());
+		listeningPort = NetworkManager.getListeningPort();
 		randomBytes = Utility.randomBytes(128);
 	}
 }

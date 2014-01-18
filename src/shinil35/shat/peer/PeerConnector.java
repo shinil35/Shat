@@ -18,6 +18,9 @@ package shinil35.shat.peer;
 
 import java.util.ArrayList;
 
+import shinil35.shat.log.Log;
+import shinil35.shat.log.LogTraceType;
+import shinil35.shat.network.NetworkManager;
 import shinil35.shat.util.Utility;
 
 public class PeerConnector implements Runnable
@@ -30,15 +33,35 @@ public class PeerConnector implements Runnable
 	@Override
 	public void run()
 	{
-		ArrayList<Peer> peerList = PeerManager.getPeerList();
+			ArrayList<Peer> peerList = PeerManager.getPeerList();
 
-		for (Peer p : peerList)
-		{
-			String IP = p.getIP();
-			int port = p.getPort();
+			for (Peer p : peerList)
+			{
+				String IP = p.getIP();
+				int port = p.getPort();
 
-			if (!Utility.isValidAddress(IP, port))
-				continue;
-		}
+				if (NetworkManager.isConnected(IP, port) || Utility.getElapsedFromTime(p.getLastConnectionAttempt()) < 350000
+						|| !Utility.isValidAddress(IP, port))
+					continue;
+
+				p.setLastConnectionAttempt(Utility.getTimeNow());
+
+				Log.trace("Tentativo di connessione a " + IP + ":" + port, LogTraceType.ATTEMPTING_CONNECTION);
+
+				NetworkManager.delayedConnection(IP, port);
+
+				try
+				{
+					Thread.sleep(100);
+				}
+				catch (InterruptedException e)
+				{
+
+				}
+			}
+
+			peerList.clear();
+			
+			Log.trace("PeerConnector thread succefull completed", LogTraceType.THREAD_ALIVE);
 	}
 }

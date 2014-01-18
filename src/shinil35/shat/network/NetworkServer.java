@@ -19,12 +19,13 @@ package shinil35.shat.network;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Collection;
 
+import shinil35.shat.log.Log;
 import shinil35.shat.network.packet.IPacket;
 
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
-import com.esotericsoftware.minlog.Log;
 
 public class NetworkServer
 {
@@ -71,12 +72,23 @@ public class NetworkServer
 
 		closed = true;
 
+		if (serverListener != null && serverListener.getConnectionDatas() != null)
+		{
+			for (NetworkConnectionData cd : serverListener.getConnectionDatas().values())
+				cd.close();
+		}
+
 		if (server != null)
 			server.stop();
 
 		NetworkManager.removeServer(id);
 
 		id = 0;
+	}
+
+	public Collection<NetworkConnectionData> getConnectionDatas()
+	{
+		return serverListener.getConnectionDatas().values();
 	}
 
 	public int getPort()
@@ -115,5 +127,7 @@ public class NetworkServer
 
 			data.sendPacket(packet);
 		}
+
+		packet.dispose();
 	}
 }

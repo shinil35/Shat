@@ -14,38 +14,13 @@
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package shinil35.shat.network;
+package shinil35.shat.log;
 
-import java.io.IOException;
-
-import shinil35.shat.log.Log;
-import shinil35.shat.log.LogTraceType;
-import shinil35.shat.util.Utility;
-
-public class NetworkConnector implements Runnable
+/**
+ * Only for debugging!
+ */
+public enum LogTraceType
 {
-	private String ip;
-	private int port;
-
-	public NetworkConnector(String ip, int port)
-	{
-		this.ip = ip;
-		this.port = port;
-	}
-
-	@Override
-	public void run()
-	{
-		if (!Utility.isValidAddress(ip, port))
-			return;
-
-		try
-		{
-			NetworkManager.waitForConnection(ip, port);
-		}
-		catch (IOException e)
-		{
-			Log.trace("Connessione a \"[" + ip + "]:" + port + "\" fallita", LogTraceType.CONNECTION_FAILED);
-		}
-	}
+	OUTGOING_CONNECTION, INCOMING_CONNECTION, DISCONNECTED, HANDSHAKE_COMPLETED, CONNECTION_FAILED, ATTEMPTING_CONNECTION,
+	PEERLIST_SENDING, PEERLIST_RECEIVED, PEERLIST_REQUESTING, PEER_DISCOVERED, THREAD_ALIVE;
 }

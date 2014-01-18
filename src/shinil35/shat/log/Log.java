@@ -1,4 +1,4 @@
-package com.esotericsoftware.minlog;
+package shinil35.shat.log;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -7,16 +7,15 @@ import java.util.Date;
 import shinil35.shat.Language;
 
 /**
+ * Modified for Shat Encrypted P2P Chat from Shinil35.
+ * 
  * A low overhead, lightweight logging system.
  * 
  * @author Nathan Sweet <misc@n4te.com>
  */
+
 public class Log
 {
-	/**
-	 * Performs the actual logging. Default implementation logs to System.out.
-	 * Extended and use {@link Log#logger} set to handle logging differently.
-	 */
 	static public class Logger
 	{
 		private long firstLogTime = new Date().getTime();
@@ -74,76 +73,34 @@ public class Log
 
 			print(builder.toString());
 		}
-
-		/**
-		 * Prints the message to System.out. Called by the default
-		 * implementation of {@link #log(int, String, String, Throwable)}.
-		 */
+		
 		protected void print(String message)
 		{
 			System.out.println(message);
 		}
 	}
 
-	/** No logging at all. */
 	static public final int LEVEL_NONE = 6;
-	/** Critical errors. The application may no longer work correctly. */
 	static public final int LEVEL_ERROR = 5;
-	/** Important warnings. The application will continue to work correctly. */
 	static public final int LEVEL_WARN = 4;
-	/** Informative messages. Typically used for deployment. */
 	static public final int LEVEL_INFO = 3;
-	/** Debug messages. This level is useful during development. */
 	static public final int LEVEL_DEBUG = 2;
-
-	/**
-	 * Trace messages. A lot of information is logged, so this level is usually
-	 * only needed when debugging a problem.
-	 */
 	static public final int LEVEL_TRACE = 1;
 
-	/**
-	 * The level of messages that will be logged. Compiling this and the
-	 * booleans below as "final" will cause the compiler to remove all
-	 * "if (Log.info) ..." type statements below the set level.
-	 */
 	static private int level = LEVEL_INFO;
-	/** True when the ERROR level will be logged. */
 	static public boolean ERROR = level <= LEVEL_ERROR;
-	/** True when the WARN level will be logged. */
 	static public boolean WARN = level <= LEVEL_WARN;
-	/** True when the INFO level will be logged. */
 	static public boolean INFO = level <= LEVEL_INFO;
-	/** True when the DEBUG level will be logged. */
 	static public boolean DEBUG = level <= LEVEL_DEBUG;
 
-	/** True when the TRACE level will be logged. */
 	static public boolean TRACE = level <= LEVEL_TRACE;
 
 	static private Logger logger = new Logger();
 
-	static public void debug(String message)
+	static private void debug(String message)
 	{
 		if (DEBUG)
 			logger.log(LEVEL_DEBUG, null, message, null);
-	}
-
-	static public void debug(String category, String message)
-	{
-		if (DEBUG)
-			logger.log(LEVEL_DEBUG, category, message, null);
-	}
-
-	static public void debug(String category, String message, Throwable ex)
-	{
-		if (DEBUG)
-			logger.log(LEVEL_DEBUG, category, message, ex);
-	}
-
-	static public void debug(String message, Throwable ex)
-	{
-		if (DEBUG)
-			logger.log(LEVEL_DEBUG, null, message, ex);
 	}
 
 	static public void DEBUG()
@@ -151,28 +108,10 @@ public class Log
 		set(LEVEL_DEBUG);
 	}
 
-	static public void error(String message)
+	static private void error(String message)
 	{
 		if (ERROR)
 			logger.log(LEVEL_ERROR, null, message, null);
-	}
-
-	static public void error(String category, String message)
-	{
-		if (ERROR)
-			logger.log(LEVEL_ERROR, category, message, null);
-	}
-
-	static public void error(String category, String message, Throwable ex)
-	{
-		if (ERROR)
-			logger.log(LEVEL_ERROR, category, message, ex);
-	}
-
-	static public void error(String message, Throwable ex)
-	{
-		if (ERROR)
-			logger.log(LEVEL_ERROR, null, message, ex);
 	}
 
 	static public void ERROR()
@@ -180,28 +119,10 @@ public class Log
 		set(LEVEL_ERROR);
 	}
 
-	static public void info(String message)
+	static private void info(String message)
 	{
 		if (INFO)
 			logger.log(LEVEL_INFO, null, message, null);
-	}
-
-	static public void info(String category, String message)
-	{
-		if (INFO)
-			logger.log(LEVEL_INFO, category, message, null);
-	}
-
-	static public void info(String category, String message, Throwable ex)
-	{
-		if (INFO)
-			logger.log(LEVEL_INFO, category, message, ex);
-	}
-
-	static public void info(String message, Throwable ex)
-	{
-		if (INFO)
-			logger.log(LEVEL_INFO, null, message, ex);
 	}
 
 	static public void INFO()
@@ -278,14 +199,9 @@ public class Log
 	{
 		set(LEVEL_NONE);
 	}
-
-	/**
-	 * Sets the level to log. If a version of this class is being used that has
-	 * a final log level, this has no affect.
-	 */
+	
 	static public void set(int level)
 	{
-		// Comment out method contents when compiling fixed level JARs.
 		Log.level = level;
 		ERROR = level <= LEVEL_ERROR;
 		WARN = level <= LEVEL_WARN;
@@ -293,37 +209,23 @@ public class Log
 		DEBUG = level <= LEVEL_DEBUG;
 		TRACE = level <= LEVEL_TRACE;
 	}
-
-	/**
-	 * Sets the logger that will write the log messages.
-	 */
+	
 	static public void setLogger(Logger logger)
 	{
 		Log.logger = logger;
 	}
 
-	static public void trace(String message)
+	// Public method to use specially in debugging with not-localized strings.
+	static public void trace(String message, LogTraceType traceType)
+	{
+		if (TRACE && LogTraceManager.isToTrace(traceType))
+			logger.log(LEVEL_TRACE, traceType.name(), message, null);
+	}
+	
+	static private void trace(String message)
 	{
 		if (TRACE)
 			logger.log(LEVEL_TRACE, null, message, null);
-	}
-
-	static public void trace(String category, String message)
-	{
-		if (TRACE)
-			logger.log(LEVEL_TRACE, category, message, null);
-	}
-
-	static public void trace(String category, String message, Throwable ex)
-	{
-		if (TRACE)
-			logger.log(LEVEL_TRACE, category, message, ex);
-	}
-
-	static public void trace(String message, Throwable ex)
-	{
-		if (TRACE)
-			logger.log(LEVEL_TRACE, null, message, ex);
 	}
 
 	static public void TRACE()
@@ -331,28 +233,10 @@ public class Log
 		set(LEVEL_TRACE);
 	}
 
-	static public void warn(String message)
+	static private void warn(String message)
 	{
 		if (WARN)
 			logger.log(LEVEL_WARN, null, message, null);
-	}
-
-	static public void warn(String category, String message)
-	{
-		if (WARN)
-			logger.log(LEVEL_WARN, category, message, null);
-	}
-
-	static public void warn(String category, String message, Throwable ex)
-	{
-		if (WARN)
-			logger.log(LEVEL_WARN, category, message, ex);
-	}
-
-	static public void warn(String message, Throwable ex)
-	{
-		if (WARN)
-			logger.log(LEVEL_WARN, null, message, ex);
 	}
 
 	static public void WARN()

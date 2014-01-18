@@ -69,7 +69,9 @@ public class Language
 				texts.put("[CONSOLE_LOADING_PEERS]", "Caricamento peer manager..");
 				texts.put("[CONSOLE_LOAD_COMPLETE]", "Caricamento riuscito!");
 
-				texts.put("[CONSOLE_COMMAND_HELP]", "Utilizzo comandi: \nhelp - Visualizza questo messaggio\nexit - Chiudi il programma");
+				texts.put(
+						"[CONSOLE_COMMAND_HELP]",
+						"Utilizzo comandi: \nconnectionlist - Visualizza la lista delle connessioni\npeerlist - Visualizza la lista dei peer conosciuti\nhelp - Visualizza questo messaggio\nexit - Chiudi il programma");
 				texts.put("[CONSOLE_COMMAND_INTRO]", "Per informazioni su come usare i comandi digitare \"help\"");
 
 				texts.put("[CONFIG_LOAD_ERROR]", "Caricamento della configurazione fallito");
@@ -94,6 +96,8 @@ public class Language
 				texts.put("[NETWORK_CONNECTION_FAILED]", "Connessione fallita: \"$arg$\"");
 				texts.put("[NETWORK_LISTENING_FAILED]", "Creazione server fallita: \"$arg$\"");
 				texts.put("[NETWORK_BOOTSTRAP_INVALID]", "Dati per il bootstrap invalidi");
+				
+				texts.put("[UNKNOW_PACKET]", "Ricevuto un pacchetto sconosciuto, classe: \"$arg$\"");
 
 				texts.put("[FATAL_ERROR]", "Errore fatale, inviare il log della console ad uno sviluppatore.");
 				break;
@@ -135,6 +139,8 @@ public class Language
 				texts.put("[NETWORK_LISTENING_FAILED]", "Server creation failed: \"$arg$\"");
 				texts.put("[NETWORK_BOOTSTRAP_INVALID]", "Invalid bootstrap informations");
 
+				texts.put("[UNKNOW_PACKET]", "Unknow packet received, class: \"$arg$\"");
+				
 				texts.put("[FATAL_ERROR]", "Fatal error, send the console log at one developer.");
 				break;
 			}

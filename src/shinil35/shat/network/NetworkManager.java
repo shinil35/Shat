@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import shinil35.shat.Configuration;
 import shinil35.shat.Language;
 import shinil35.shat.Main;
+import shinil35.shat.log.Log;
 import shinil35.shat.network.packet.IPacket;
 import shinil35.shat.network.packet.P0_PublicKey;
 import shinil35.shat.network.packet.P1_KeyVerifier;
@@ -35,7 +36,6 @@ import shinil35.shat.peer.PeerData;
 import shinil35.shat.util.Utility;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.minlog.Log;
 
 public class NetworkManager
 {
@@ -77,11 +77,55 @@ public class NetworkManager
 
 	public static void delayedConnection(String IP, int port)
 	{
-		if (!Utility.isValidAddress(IP, port))
+		if (!initialized || !Utility.isValidAddress(IP, port) || isConnected(IP, port))
 			return;
 
 		NetworkConnector con = new NetworkConnector(IP, port);
 		Main.executeTask(con);
+	}
+
+	public static NetworkConnectionData getConnectionDataFromHost(String IP, int port)
+	{
+		// Check in clients network datas
+		for (NetworkClient nc : clients.values())
+		{
+			if (nc == null)
+				continue;
+
+			NetworkConnectionData d = nc.getConnectionData();
+
+			if (d == null)
+				continue;
+
+			if (d.getIP().equals(IP) && d.getPort() == port)
+				return d;
+		}
+
+		// Check in servers network datas
+		for (NetworkServer ns : servers.values())
+		{
+			if (ns == null)
+				continue;
+
+			for (NetworkConnectionData d : ns.getConnectionDatas())
+			{
+				if (d == null)
+					continue;
+
+				if (d.getIP().equals(IP) && d.getPort() == port)
+					return d;
+			}
+		}
+
+		return null;
+	}
+
+	public static int getListeningPort()
+	{
+		if (!listeningEnabled)
+			return -1;
+		else
+			return listeningPort;
 	}
 
 	public static void init()
@@ -118,6 +162,13 @@ public class NetworkManager
 
 		if (bootstrapEnabled)
 			delayedConnection(bootstrapIP, bootstrapPort);
+	}
+
+	public static boolean isConnected(String IP, int port)
+	{
+		NetworkConnectionData data = getConnectionDataFromHost(IP, port);
+
+		return data != null && data.isConnected();
 	}
 
 	public static void newServer(int bindPort)
@@ -157,6 +208,7 @@ public class NetworkManager
 
 	public static void registerPackets(Kryo packets)
 	{
+		packets.register(int.class);
 		packets.register(byte[].class);
 
 		packets.register(PublicKey.class);
@@ -251,9 +303,11 @@ public class NetworkManager
 			c.sendPacket(packet);
 	}
 
-	public static void waitForConnection(String IP, int port) throws IOException // ATTENTION: Thread will stop for connection! (Max 5 seconds)
+	public static void waitForConnection(String IP, int port) throws IOException
 	{
-		if (!initialized || !Utility.isValidAddress(IP, port))
+		// WARNING: Thread will stop waiting for a connection! (Max 5 seconds)
+
+		if (!initialized || !Utility.isValidAddress(IP, port) || isConnected(IP, port))
 			return;
 
 		int id = 0;

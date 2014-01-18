@@ -29,6 +29,15 @@ public class P4_PeerListResponse implements IPacket
 
 	private ArrayList<PeerData> peerList;
 
+	@Override
+	public void dispose()
+	{
+		if (peerList != null)
+			peerList.clear();
+
+		peerList = null;
+	}
+
 	public ArrayList<PeerData> getPeerList()
 	{
 		return peerList;
@@ -52,7 +61,8 @@ public class P4_PeerListResponse implements IPacket
 
 		if (!empty)
 		{
-			peerList = PeerManager.getPeerDataList(peerResponseSize, Hashing.getHash(connectionData.getPublicKey()));
+			peerList = PeerManager.getPeerDataList(peerResponseSize, Hashing.getHash(connectionData.getPublicKey()),
+					connectionData.getAlreadySendedPeers());
 
 			if (peerList != null && peerList.size() == 0)
 				peerList = null;

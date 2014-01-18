@@ -24,7 +24,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.esotericsoftware.minlog.Log;
+import shinil35.shat.log.Log;
 
 public class Database
 {

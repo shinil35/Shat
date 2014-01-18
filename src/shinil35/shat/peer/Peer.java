@@ -29,6 +29,7 @@ public class Peer
 	private int port;
 	private int status;
 	private long lastCommunication;
+	private long lastConnectionAttempt;
 
 	public static final int UNKNOW = 0;
 	public static final int AVAILABLE = 1;
@@ -37,9 +38,11 @@ public class Peer
 	public Peer(PublicKey publicKey, String ip, int port, long last)
 	{
 		setPublicKey(publicKey);
+
 		this.ip = ip;
 		this.port = port;
 		this.lastCommunication = last;
+		this.lastConnectionAttempt = 0;
 	}
 
 	public Hash getHash()
@@ -55,6 +58,11 @@ public class Peer
 	public long getLastCommunication()
 	{
 		return lastCommunication;
+	}
+
+	public long getLastConnectionAttempt()
+	{
+		return lastConnectionAttempt;
 	}
 
 	public PeerData getPeerData()
@@ -80,6 +88,11 @@ public class Peer
 	public void setLastCommunication(long last)
 	{
 		lastCommunication = last;
+	}
+
+	public void setLastConnectionAttempt(long last)
+	{
+		lastConnectionAttempt = last;
 	}
 
 	public void setPublicKey(PublicKey pk)

@@ -40,6 +40,11 @@ public class PeerData
 		this.port = port;
 	}
 
+	public Hash getHash()
+	{
+		return Hashing.getHash(encodedPublicKey);
+	}
+
 	public Peer getPeer()
 	{
 		Hash h = Hashing.getHash(encodedPublicKey);

@@ -33,6 +33,14 @@ public class P5_Message implements IPacket
 	private byte[] encryptedSourcePublicKey;
 	private byte[] randomBytes;
 
+	@Override
+	public void dispose()
+	{
+		encryptedSignedMessage = null;
+		encryptedSourcePublicKey = null;
+		randomBytes = null;
+	}
+
 	public Hash getPacketHash()
 	{
 		ByteBuffer hashB = ByteBuffer.allocate(encryptedSignedMessage.length + randomBytes.length + encryptedSourcePublicKey.length);
@@ -52,13 +60,16 @@ public class P5_Message implements IPacket
 			byte[] decryptedSource = RSA.decrypt(encryptedSourcePublicKey, Main.getPrivateKey(), false); // Decrypt source's encoded public key
 			if (decryptedSource == null)
 				return null;
+
 			byte[] decryptedSignedMessage = RSA.decrypt(encryptedSignedMessage, Main.getPrivateKey(), false); // Decrypt signed messagge
 			if (decryptedSignedMessage == null)
 				return null;
+
 			PublicKey source = Encoding.decodePublicKey(decryptedSource); // Decode source's publickey
 			if (source == null)
 				return null;
-			String message = new String(RSA.decrypt(decryptedSignedMessage, source, true), Main.getCharset()); // Decrypt message
+
+			String message = new String(RSA.decrypt(decryptedSignedMessage, source, false), Main.getCharset()); // Decrypt message
 			if (message == null || message.equals(""))
 				return null;
 

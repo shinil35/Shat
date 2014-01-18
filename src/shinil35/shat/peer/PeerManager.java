@@ -30,13 +30,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import shinil35.shat.Database;
 import shinil35.shat.Main;
+import shinil35.shat.log.Log;
+import shinil35.shat.log.LogTraceType;
 import shinil35.shat.network.NetworkConnectionData;
 import shinil35.shat.util.Encoding;
 import shinil35.shat.util.Hash;
 import shinil35.shat.util.Hashing;
 import shinil35.shat.util.Utility;
-
-import com.esotericsoftware.minlog.Log;
 
 public class PeerManager
 {
@@ -53,9 +53,10 @@ public class PeerManager
 
 	public static void addPeer(Peer p, boolean database)
 	{
-		if (!initialized || peers.containsKey(p.getHash()) || Hashing.getHash(Main.getPublicKey()).equals(p.getHash())
-				|| !Utility.isValidAddress(p.getIP(), p.getPort()))
+		if (!initialized || peers.containsKey(p.getHash()) || Hashing.getHash(Main.getPublicKey()).equals(p.getHash()))
 			return;
+
+		Log.trace("New peer discovered: " + p.getIP() + ":" + p.getPort(), LogTraceType.PEER_DISCOVERED);
 
 		if (!database)
 		{
@@ -128,7 +129,7 @@ public class PeerManager
 		return lastPeerListUpdating;
 	}
 
-	public static ArrayList<PeerData> getPeerDataList(int maxPeers, Hash exclude)
+	public static ArrayList<PeerData> getPeerDataList(int maxPeers, Hash exclude, ArrayList<Hash> alreadySendedPeers)
 	{
 		if (!initialized)
 			return null;
@@ -139,8 +140,13 @@ public class PeerManager
 		{
 			for (Peer p : peers.values())
 			{
-				if (!p.getHash().equals(exclude) && Utility.isValidAddress(p.getIP(), p.getPort()))
-					toReturn.add(p.getPeerData());
+				if (alreadySendedPeers.contains(p.getHash()))
+					continue;
+
+				if (p.getHash().equals(exclude)) // TODO: Block self-connection loop in other way
+					continue;
+
+				toReturn.add(p.getPeerData());
 			}
 		}
 		else
@@ -149,8 +155,13 @@ public class PeerManager
 
 			for (Peer p : orderedPeers)
 			{
-				if (!p.getHash().equals(exclude) && Utility.isValidAddress(p.getIP(), p.getPort()))
-					toReturn.add(p.getPeerData());
+				if (alreadySendedPeers.contains(p.getHash()))
+					continue;
+
+				if (p.getHash().equals(exclude)) // TODO: Block self-connection loop in other way
+					continue;
+
+				toReturn.add(p.getPeerData());
 			}
 
 			toReturn = new ArrayList<PeerData>(toReturn.subList(0, maxPeers));
@@ -187,6 +198,7 @@ public class PeerManager
 		initialized = true;
 
 		loadPeerList();
+		startPeerConnector();
 	}
 
 	public static void loadPeerList()
@@ -287,5 +299,10 @@ public class PeerManager
 		});
 
 		return p;
+	}
+
+	public static void startPeerConnector()
+	{
+		
 	}
 }

@@ -27,7 +27,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.RSAPrivateKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 
-import com.esotericsoftware.minlog.Log;
+import shinil35.shat.log.Log;
 
 public class Encoding
 {
@@ -70,7 +70,7 @@ public class Encoding
 		}
 		catch (Exception e)
 		{
-			Log.warn("[DECODING_ERROR]", e.getMessage());
+			Log.localizedWarn("[DECODING_ERROR]", e.getMessage());
 			return null;
 		}
 	}
@@ -110,7 +110,7 @@ public class Encoding
 		}
 		catch (Exception e)
 		{
-			Log.warn("[DECODING_ERROR]", e.getMessage());
+			Log.localizedWarn("[DECODING_ERROR]", e.getMessage());
 			return null;
 		}
 	}

@@ -35,6 +35,12 @@ public class P2_KeyVerifier implements IPacket
 	}
 
 	@Override
+	public void dispose()
+	{
+		encryptedRandomBytes = null;
+	}
+
+	@Override
 	public void writePacket(NetworkConnectionData connectionData, IPacket oldPacket, Object packetData)
 	{
 		if (!oldPacket.getClass().equals(P1_KeyVerifier.class))

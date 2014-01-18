@@ -39,6 +39,14 @@ public class P1_KeyVerifier implements IPacket
 		return Arrays.equals(realData, decData);
 	}
 
+	@Override
+	public void dispose()
+	{
+		encryptedPublicKey = null;
+		encryptedRandomBytes = null;
+		newRandomBytes = null;
+	}
+
 	public PublicKey getPublicKey()
 	{
 		return Encoding.decodePublicKey(RSA.decrypt(encryptedPublicKey, Main.getPrivateKey(), true));

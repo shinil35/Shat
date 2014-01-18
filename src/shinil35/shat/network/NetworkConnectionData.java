@@ -19,16 +19,18 @@ package shinil35.shat.network;
 import java.security.PublicKey;
 import java.util.ArrayList;
 
+import shinil35.shat.log.Log;
+import shinil35.shat.log.LogTraceType;
 import shinil35.shat.network.packet.IPacket;
 import shinil35.shat.network.packet.P3_PeerListRequest;
 import shinil35.shat.network.packet.P4_PeerListResponse;
 import shinil35.shat.network.packet.P5_Message;
+import shinil35.shat.peer.PeerData;
 import shinil35.shat.peer.PeerManager;
 import shinil35.shat.util.Hash;
 import shinil35.shat.util.Utility;
 
 import com.esotericsoftware.kryonet.Connection;
-import com.esotericsoftware.minlog.Log;
 
 public class NetworkConnectionData
 {
@@ -45,15 +47,56 @@ public class NetworkConnectionData
 	private long lastPeersRequestingTime = 0;
 
 	private ArrayList<Hash> messageHashes;
+	private ArrayList<Hash> alreadySendedPeers;
 
-	public NetworkConnectionData(Connection conn)
+	private NetworkConnectionType connectionType;
+	private int listeningPort = -1;
+
+	private boolean closed = false;
+
+	public NetworkConnectionData(Connection conn, NetworkConnectionType type)
 	{
 		this.conn = conn;
+		this.connectionType = type;
 		this.messageHashes = new ArrayList<Hash>();
+		this.alreadySendedPeers = new ArrayList<Hash>();
+
+		if (connectionType.equals(NetworkConnectionType.OUTGOING))
+			this.listeningPort = conn.getRemoteAddressTCP().getPort();
+	}
+
+	public void close()
+	{
+		if (closed)
+			return;
+
+		closed = true;
+
+		if (conn != null)
+			conn.close();
+
+		if (messageHashes != null)
+			messageHashes.clear();
+
+		if (alreadySendedPeers != null)
+			alreadySendedPeers.clear();
+
+		lastPeersSendingTime = 0;
+		lastPeersRequestingTime = 0;
+		listeningPort = 0;
+
+		randomBytes = null;
+		publicKey = null;
+		conn = null;
+		messageHashes = null;
+		alreadySendedPeers = null;
 	}
 
 	public void elaboratePacket(IPacket inPacket)
 	{
+		if (closed)
+			return;
+
 		if (!getHandshakeStatus())
 		{
 			conn.close();
@@ -72,9 +115,9 @@ public class NetworkConnectionData
 			peerListRequested = false;
 
 			P4_PeerListResponse resp = (P4_PeerListResponse) inPacket;
-			PeerManager.addPeerDataList(resp.getPeerList());
+			Log.trace("Received peer list with " + resp.getQuantity() + " peers", LogTraceType.PEERLIST_RECEIVED);
 
-			Log.trace("Received peer list!");
+			PeerManager.addPeerDataList(resp.getPeerList());
 		}
 		else if (inPacket instanceof P5_Message)
 		{
@@ -86,61 +129,104 @@ public class NetworkConnectionData
 
 			messageHashes.add(messageHash);
 
+			String message = messagePacket.testDecrypt();
+
+			NetworkManager.sendToAll(messagePacket);
+
+			if (message != null)
+				System.out.println("Ricevuto messaggio: \"" + message + "\"");
 		}
 		else
-			Log.warn("Unknow packet: " + inPacket.getClass().getName());
+			Log.localizedWarn("[UNKNOW_PACKET]", inPacket.getClass().getName());
+
+		inPacket.dispose();
+	}
+
+	public ArrayList<Hash> getAlreadySendedPeers()
+	{
+		if (closed)
+			return null;
+
+		return alreadySendedPeers;
 	}
 
 	public boolean getHandshakeStatus()
 	{
+		if (closed)
+			return false;
+
 		return handshakeCompleted;
 	}
 
 	public String getIP()
 	{
+		if (closed)
+			return null;
+
 		return conn.getRemoteAddressTCP().getHostString();
 	}
 
 	public long getPeersRequestingTime()
 	{
+		if (closed)
+			return -1;
+
 		return lastPeersRequestingTime;
 	}
 
 	public long getPeersSendingTime()
 	{
+		if (closed)
+			return -1;
+
 		return lastPeersSendingTime;
 	}
 
 	public int getPort()
 	{
-		return conn.getRemoteAddressTCP().getPort();
+		if (closed)
+			return -1;
+
+		return listeningPort;
 	}
 
 	public PublicKey getPublicKey()
 	{
+		if (closed)
+			return null;
+
 		return publicKey;
 	}
 
 	public byte[] getRandomBytes()
 	{
+		if (closed)
+			return null;
+
 		return randomBytes;
 	}
 
-	public void handshakeWasCompleted()
+	public void handshakeCompleted()
 	{
+		if (closed)
+			return;
+
 		handshakeCompleted = true;
 
 		PeerManager.generatePeer(this);
 	}
 
-	public boolean messageWasSended(Hash hash)
+	public boolean isConnected()
 	{
-		return messageHashes.contains(hash);
+		if (closed)
+			return false;
+		
+		return conn.isConnected();
 	}
 
 	public void requestPeerList()
 	{
-		if (!getHandshakeStatus() || Utility.getElapsedFromTime(getPeersRequestingTime()) < 30000)
+		if (closed || !getHandshakeStatus() || Utility.getElapsedFromTime(getPeersRequestingTime()) < 30000)
 			return;
 
 		lastPeersRequestingTime = Utility.getTimeNow();
@@ -150,30 +236,22 @@ public class NetworkConnectionData
 		outPacket.writePacket(this, null, null);
 		conn.sendTCP(outPacket);
 
-		Log.trace("Requesting peer list");
+		outPacket.dispose();
+		
+		Log.trace("Requesting peer list",LogTraceType.PEERLIST_REQUESTING);
 	}
 
 	public void sendPacket(IPacket outPacket)
 	{
-		if (!getHandshakeStatus())
+		if (closed || !getHandshakeStatus())
 			return;
 
-		if (outPacket instanceof P5_Message)
-		{
-			P5_Message outMessage = (P5_Message) outPacket;
-
-			if (messageWasSended(outMessage.getPacketHash()))
-				return;
-
-			messageHashes.add(outMessage.getPacketHash());
-
-			conn.sendTCP(outMessage);
-		}
+		// TODO: Send packet here
 	}
 
 	public void sendPeerList()
 	{
-		if (!getHandshakeStatus() || Utility.getElapsedFromTime(getPeersSendingTime()) < 20000)
+		if (closed || !getHandshakeStatus() || Utility.getElapsedFromTime(getPeersSendingTime()) < 20000)
 			return;
 
 		P4_PeerListResponse outPacket = new P4_PeerListResponse();
@@ -181,22 +259,47 @@ public class NetworkConnectionData
 		if (lastPeersSendingTime > PeerManager.getLastPeerListUpdate())
 			outPacket.writePacket(this, null, true);
 		else
-			outPacket.writePacket(this, null, null);
+			outPacket.writePacket(this, null, false);
+
+		if (outPacket.getQuantity() > 0)
+		{
+			for (PeerData peerD : outPacket.getPeerList())
+			{
+				if (!alreadySendedPeers.contains(peerD.getHash()))
+					alreadySendedPeers.add(peerD.getHash());
+			}
+		}
 
 		lastPeersSendingTime = Utility.getTimeNow();
 
-		int b = conn.sendTCP(outPacket);
+		conn.sendTCP(outPacket);
 
-		Log.trace("Sending peer list, bytes: " + b + ", count: " + outPacket.getQuantity());
+		outPacket.dispose();
+		
+		Log.trace("Sending peer list with " + outPacket.getQuantity() + " peers.", LogTraceType.PEERLIST_SENDING);
+	}
+
+	public void setListeningPort(int port)
+	{
+		if (closed)
+			return;
+
+		listeningPort = port;
 	}
 
 	public void setPublicKey(PublicKey pk)
 	{
+		if (closed)
+			return;
+		
 		publicKey = pk;
 	}
 
 	public void setRandomBytes(byte[] rb)
 	{
+		if (closed)
+			return;
+		
 		randomBytes = rb;
 	}
 }

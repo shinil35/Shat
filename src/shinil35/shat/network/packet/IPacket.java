@@ -20,5 +20,7 @@ import shinil35.shat.network.NetworkConnectionData;
 
 public interface IPacket
 {
+	public void dispose();
+
 	public void writePacket(NetworkConnectionData connectionData, IPacket receivedPacket, Object packetData);
 }

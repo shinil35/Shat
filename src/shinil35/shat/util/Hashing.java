@@ -19,7 +19,7 @@ package shinil35.shat.util;
 import java.security.MessageDigest;
 import java.security.PublicKey;
 
-import com.esotericsoftware.minlog.Log;
+import shinil35.shat.log.Log;
 
 public class Hashing
 {

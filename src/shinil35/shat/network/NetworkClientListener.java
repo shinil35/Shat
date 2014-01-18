@@ -16,6 +16,8 @@
 
 package shinil35.shat.network;
 
+import shinil35.shat.log.Log;
+import shinil35.shat.log.LogTraceType;
 import shinil35.shat.network.packet.IPacket;
 import shinil35.shat.network.packet.P0_PublicKey;
 import shinil35.shat.network.packet.P1_KeyVerifier;
@@ -25,7 +27,6 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.FrameworkMessage;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Listener.ThreadedListener;
-import com.esotericsoftware.minlog.Log;
 
 public class NetworkClientListener extends ThreadedListener
 {
@@ -42,9 +43,9 @@ public class NetworkClientListener extends ThreadedListener
 	@Override
 	public void connected(Connection conn)
 	{
-		Log.trace("Nuova connessione in uscita, id: " + conn.getID());
+		Log.trace("Nuova connessione in uscita, id: " + conn.getID(), LogTraceType.OUTGOING_CONNECTION);
 
-		connectionData = new NetworkConnectionData(conn);
+		connectionData = new NetworkConnectionData(conn, NetworkConnectionType.OUTGOING);
 
 		P0_PublicKey outPacket = new P0_PublicKey();
 		outPacket.writePacket(connectionData, null, null);
@@ -56,7 +57,7 @@ public class NetworkClientListener extends ThreadedListener
 	@Override
 	public void disconnected(Connection conn)
 	{
-		Log.debug("Connessione in uscita chiusa, id: " + conn.getID());
+		Log.trace("Connessione in uscita chiusa, id: " + conn.getID(), LogTraceType.DISCONNECTED);
 
 		if (networkClient != null)
 			networkClient.close();
@@ -68,14 +69,14 @@ public class NetworkClientListener extends ThreadedListener
 	}
 
 	@Override
-	public void received(Connection conn, Object rec)
+	public void received(Connection conn, Object inPacket)
 	{
-		if (rec instanceof FrameworkMessage)
+		if (inPacket instanceof FrameworkMessage)
 			return;
 
-		if (rec instanceof P1_KeyVerifier)
+		if (inPacket instanceof P1_KeyVerifier)
 		{
-			P1_KeyVerifier packet = (P1_KeyVerifier) rec;
+			P1_KeyVerifier packet = (P1_KeyVerifier) inPacket;
 
 			connectionData.setPublicKey(packet.getPublicKey());
 
@@ -85,17 +86,17 @@ public class NetworkClientListener extends ThreadedListener
 				return;
 			}
 
-			connectionData.handshakeWasCompleted();
+			connectionData.handshakeCompleted();
 
-			Log.trace("Handshake completo, id: " + conn.getID());
+			Log.trace("Handshake completo, id: " + conn.getID(), LogTraceType.HANDSHAKE_COMPLETED);
 
 			P2_KeyVerifier outPacket = new P2_KeyVerifier();
 			outPacket.writePacket(connectionData, packet, null);
 			conn.sendTCP(outPacket);
 		}
-		else if (rec instanceof IPacket)
-			connectionData.elaboratePacket((IPacket) rec);
+		else if (inPacket instanceof IPacket)
+			connectionData.elaboratePacket((IPacket) inPacket);
 		else
-			Log.debug("Pacchetto sconosciuto, classe: \"" + rec.getClass().getCanonicalName() + "\", id connessione: " + conn.getID());
+			Log.localizedWarn("[UNKNOW_PACKET]", inPacket.getClass().getName());
 	}
 }

@@ -14,38 +14,19 @@
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package shinil35.shat.network;
-
-import java.io.IOException;
+package shinil35.shat.peer;
 
 import shinil35.shat.log.Log;
 import shinil35.shat.log.LogTraceType;
-import shinil35.shat.util.Utility;
+import shinil35.shat.network.NetworkManager;
 
-public class NetworkConnector implements Runnable
+public class PeerRequester implements Runnable
 {
-	private String ip;
-	private int port;
-
-	public NetworkConnector(String ip, int port)
-	{
-		this.ip = ip;
-		this.port = port;
-	}
-
 	@Override
 	public void run()
 	{
-		if (!Utility.isValidAddress(ip, port))
-			return;
-
-		try
-		{
-			NetworkManager.waitForConnection(ip, port);
-		}
-		catch (IOException e)
-		{
-			Log.trace("Connessione a \"[" + ip + "]:" + port + "\" fallita", LogTraceType.CONNECTION_FAILED);
-		}
+		NetworkManager.requestPeerList();
+		
+		Log.trace("PeerRequester thread succefull completed", LogTraceType.THREAD_ALIVE);
 	}
 }

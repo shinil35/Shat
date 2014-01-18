@@ -24,18 +24,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
+import shinil35.shat.log.Log;
+import shinil35.shat.log.LogTraceManager;
 import shinil35.shat.network.NetworkManager;
-import shinil35.shat.network.NetworkPeerRequester;
+import shinil35.shat.peer.Peer;
 import shinil35.shat.peer.PeerManager;
 import shinil35.shat.util.Encoding;
 import shinil35.shat.util.RSA;
-
-import com.esotericsoftware.minlog.Log;
 
 public class Main
 {
@@ -44,7 +44,7 @@ public class Main
 	private static Charset charset = Charset.forName("UTF-8");
 	private static KeyPair rsaKeys = null;
 
-	private static ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(10);
+	private static ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(5);
 
 	/**
 	 * Close shat
@@ -87,6 +87,29 @@ public class Main
 
 				switch (command)
 				{
+					case "connectionlist":
+						
+						// TODO: Programmare questo comando
+						
+						break;
+						
+					case "peerlist":
+
+						ArrayList<Peer> peerlist = PeerManager.getPeerList();
+
+						for (Peer p : peerlist)
+						{
+							String readableHost = p.getIP();
+							if (readableHost.contains(":"))
+								readableHost = "[" + readableHost + "]"; // IPv6 IP
+							readableHost += ":" + p.getPort();
+
+							System.out.println("Host: " + readableHost);
+							System.out.println("PublicKey Hash: " + p.getHash().getReadableHash());
+						}
+
+						break;
+
 					case "close":
 					case "exit":
 						close();
@@ -144,6 +167,7 @@ public class Main
 	public static void main(String[] args)
 	{
 		Configuration.loadConfig();
+		LogTraceManager.loadTraceManager();
 		Language.setLanguage(Configuration.getProperty("log.language"));
 
 		int logLevel = Integer.parseInt(Configuration.getProperty("log.level"));
@@ -204,8 +228,6 @@ public class Main
 
 		Log.localizedInfo("[CONSOLE_LOADING_NET]");
 		NetworkManager.init();
-
-		scheduledExecutor.scheduleWithFixedDelay(new NetworkPeerRequester(), 0, 30, TimeUnit.SECONDS);
 
 		Log.localizedInfo("[CONSOLE_LOAD_COMPLETE]");
 

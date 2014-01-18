@@ -51,6 +51,9 @@ public class NetworkClient
 
 		closed = true;
 
+		if (clientListener != null || clientListener.getConnectionData() != null)
+			clientListener.getConnectionData().close();
+
 		if (client != null)
 			client.stop();
 
@@ -78,6 +81,11 @@ public class NetworkClient
 		return client;
 	}
 
+	public NetworkConnectionData getConnectionData()
+	{
+		return clientListener.getConnectionData();
+	}
+
 	public void requestPeerList()
 	{
 		if (closed)
@@ -102,6 +110,8 @@ public class NetworkClient
 			return;
 
 		data.sendPacket(packet);
+
+		packet.dispose();
 	}
 
 }
