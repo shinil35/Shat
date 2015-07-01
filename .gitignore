@@ -1,6 +1,6 @@
-target/
-.settings/
-bin/
+/target/
+/.settings/
+/bin/
 .classpath
 .project
 shat.db
