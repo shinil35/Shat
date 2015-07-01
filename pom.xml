@@ -12,10 +12,19 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.3</version>
         <configuration>
-          <source/>
-          <target/>
+          <source>7</source>
+          <target>7</target>
         </configuration>
       </plugin>
     </plugins>
   </build>
+  <dependencies>
+	<dependency>
+		<groupId>com.esotericsoftware.kryonet</groupId>
+		<artifactId>kryonet</artifactId>
+		<version>2.18</version>
+		<scope>system</scope>
+		<systemPath>${basedir}/lib/kryonet-2.18-all.jar</systemPath>
+	</dependency>
+  </dependencies>
 </project>
