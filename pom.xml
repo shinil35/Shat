@@ -26,5 +26,12 @@
 		<scope>system</scope>
 		<systemPath>${basedir}/lib/kryonet-2.18-all.jar</systemPath>
 	</dependency>
+	<dependency>
+		<groupId>com.esotericsoftware.kryonet</groupId>
+		<artifactId>sqlite-jdbc</artifactId>
+		<version>3.7.2</version>
+		<scope>system</scope>
+		<systemPath>${basedir}/lib/sqlite-jdbc-3.7.2.jar</systemPath>
+	</dependency>
   </dependencies>
 </project>
