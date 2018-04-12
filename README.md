@@ -1,4 +1,4 @@
-# Shat - P2P Encrypted Chat <img src="https://img.shields.io/badge/project-discontinued-red.svg">
+# Shat - P2P Encrypted Chat <img src="https://img.shields.io/badge/status-discontinued-red.svg">
 
 This program use Kryonet ( http://code.google.com/p/kryonet/ ) read the license file into ./lib folder.
 This program is relased under GNU GPL, read LICENSE file for more informations.
